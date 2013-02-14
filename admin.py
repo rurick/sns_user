@@ -8,6 +8,7 @@ class SnsTypeAdmin(admin.ModelAdmin):
     
 class SnsUserAdmin(admin.ModelAdmin):
     list_display = ('id','name', 'uid', 'sns_type');
+    search_fields = ['uid'];
     
 admin.site.register(SnsType, SnsTypeAdmin)
 admin.site.register(SnsUser, SnsUserAdmin)

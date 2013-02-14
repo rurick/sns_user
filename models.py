@@ -16,7 +16,7 @@ now = timezone.now;
 class Flags(ModelWithCaching):
     key = models.CharField(primary_key=True, max_length = 32);
     value = models.CharField(max_length = 128);
-    deadline = models.DateTimeField(auto_now_add = True);
+    deadline = models.DateTimeField();
     life_secs = models.IntegerField(default = 60);
 
     @classmethod
@@ -47,6 +47,9 @@ class Flags(ModelWithCaching):
 class SnsDriver(object):
     """абстрактный Класс-драйвер соцсети"""
     __metaclass__=ABCMeta;
+
+    def register_user_level(self, uid, level):
+	pass;
     
     @abstractmethod
     def get_image(self, uid, size = (50,50)):
@@ -116,6 +119,7 @@ class SnsUser(ModelWithCaching):
 	"""Проверим зарегин ли пользователь"""
 	try:
 	    user = cls.objects.get(uid = vid, sns_type_id = sns);
+	    user.refresh_img();
 	except models.ObjectDoesNotExist:
 	    return False;
 	return SnsUser.factory(user.id);
@@ -132,13 +136,21 @@ class SnsUser(ModelWithCaching):
 	user.save_in();
 	return SnsUser.factory(user.id);
 
+    def report_user_level(self, level):
+	drv = self._get_class();
+	return drv.report_user_level(self.uid, level);
+	
+    
     def get_app_freands(self):
 	drv = self._get_class();
 	return drv.get_app_freands(self.uid);
     
+    def get_freands(self):
+	drv = self._get_class();
+	return drv.get_freands(self.uid);
+    
     def is_session(self, request):
 	session_id = request.REQUEST.get('session_id', '');
-	debug_file(('is', session_id));
 	return session_id != '';
     
     def start_session(self):
@@ -147,7 +159,6 @@ class SnsUser(ModelWithCaching):
         sid = hashlib.md5("%s%s%s" % (self.uid, self.sns_type_id, self.login_time)).hexdigest();
         self.session_id = sid;
         self.save_up();
-	debug_file(('start', sid));
         return sid;
 
     def check_auth(self, session_id):
@@ -161,6 +172,13 @@ class SnsUser(ModelWithCaching):
             from sns_user.vk.models import SNSVkDriver;
             return SNSVkDriver();
             
+    def sendNotify(self, notify_text):
+	Driver = self._get_class();
+	Driver.send_notify(self.uid, notify_text);
+
+    def send_notifies(self, uids, notify_text):
+	Driver = self._get_class();
+	Driver.send_notifies(uids, notify_text);
     
     @property
     def Url(self):
@@ -181,11 +199,13 @@ class SnsUser(ModelWithCaching):
         return self.img;
     
     def refresh_img(self):
+	Driver = self._get_class();
         self.img = Driver.get_image(self.uid);
+	self.save_up();
         
     def was_today(self):
 	"""заходил ли игрок сегодня"""
-	return self.login_time.date() == datetime.date.today();
+	return self.login_time.date() == now().date();
 
 
     @property

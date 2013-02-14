@@ -5,3 +5,4 @@ VK_API_URL = 'http://api.vk.com/api.php';
 
 #время ожидания соединения с вк-api
 VK_CONNECT_TIMEOUT = 15;
+
