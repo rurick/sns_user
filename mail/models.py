@@ -120,7 +120,7 @@ class SNSMailDriver(SnsDriver):
 	"""Получить друзей """
 	url = MAIL_API_URL;
 	params = {'app_id' : MAIL_API_ID,
-                  'method' : 'friends.getAppUsers',
+                  'method' : 'friends.get',
                   'uid' : vid,
                   'secure' : 1,
                   'ext' : 1,

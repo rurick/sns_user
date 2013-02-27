@@ -94,6 +94,7 @@ class SnsUser(ModelWithCaching):
     img = models.CharField(max_length = 128, null = True, blank = True, default = None);
     url = models.CharField(max_length = 128, null = True, blank = True, default = None);
     email = models.CharField(max_length = 128, null = True, blank = True, default = None);
+    #api_url = models.CharField(max_length = 128, null = True, blank = True, default = None);
     
     suspended = models.BooleanField(null = False, default = False, help_text = u'Признак блокировки пользователя');
     
@@ -163,7 +164,8 @@ class SnsUser(ModelWithCaching):
 
     def check_auth(self, session_id):
 	if session_id != self.session_id:
-	    debug_file((session_id != self.session_id, session_id, self.session_id));
+	    pass;
+	    #debug_file((session_id != self.session_id, session_id, self.session_id));
         return session_id == self.session_id;
     
     def _get_class(self):
@@ -171,6 +173,12 @@ class SnsUser(ModelWithCaching):
         if self.sns_type_id == 'vk':
             from sns_user.vk.models import SNSVkDriver;
             return SNSVkDriver();
+        if self.sns_type_id == 'mail':
+            from sns_user.mail.models import SNSMailDriver;
+            return SNSMailDriver();
+        if self.sns_type_id == 'odkl':
+            from sns_user.odkl.models import SNSOdklDriver;
+            return SNSOdklDriver();
             
     def sendNotify(self, notify_text):
 	Driver = self._get_class();
@@ -196,6 +204,8 @@ class SnsUser(ModelWithCaching):
         if self.img is None:
             Driver = self._get_class();
             self.img = Driver.get_image(self.uid);
+	#if self.sns_type_id == 'odkl':
+	#    self.img = '/kazino/data/images/freands_photo.jpg';
         return self.img;
     
     def refresh_img(self):
